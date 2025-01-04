@@ -12,6 +12,7 @@ const wishlist = require("./route/wishlist.route");
 const castRoute = require("./route/cast.route");
 const purchasedRoute = require("./route/purchased.route");
 const reviewRoute = require("./route/review.route")
+const videoRoutes = require('./route/video.routes');
 
 // Middleware
 app.use(cors());
@@ -27,6 +28,7 @@ app.use(wishlist);
 app.use(castRoute);
 app.use(purchasedRoute);
 app.use(reviewRoute)
+app.use('/api/videos', videoRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Crypto Web");
