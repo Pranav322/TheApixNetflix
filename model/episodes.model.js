@@ -1,16 +1,38 @@
 const mongoose = require("mongoose");
 
 const episodesSchema = new mongoose.Schema({
-  episode_url: {
+  episodeName: {
     type: String,
     required: true,
   },
-  episode_time: {
+  seasonName: {
     type: String,
+    required: true,
+  },
+  seasonNumber: {
+    type: Number,
+    required: true,
   },
   movieId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "movie",
+    type: String, // Unique identifier for the associated movie
+    required: true,
+  },
+  videoDetails: {
+    originalUrl: String,
+    publicId: String,
+    secureUrl: String,
+    duration: {
+      type: String,
+      required: true,
+    },
+    format: String,
+    thumbnailUrl: String,
+    resolutions: [
+      {
+        quality: String,
+        url: String,
+      },
+    ],
   },
 });
 

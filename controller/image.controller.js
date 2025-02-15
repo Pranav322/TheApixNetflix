@@ -1,13 +1,13 @@
 const cloudinary = require('../config/cloudinary.config');
 const streamifier = require('streamifier');
 
-const videoController = {
-  uploadVideo: async (req, res) => {
+const imageController = {
+  uploadImage: async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
           success: false,
-          error: "No video file provided"
+          error: "No image file provided"
         });
       }
 
@@ -16,18 +16,10 @@ const videoController = {
         return new Promise((resolve, reject) => {
           let stream = cloudinary.uploader.upload_stream(
             {
-              resource_type: "video",
-              folder: "videos",
-              eager: [
-                { quality: "auto:low", format: 'mp4' },    // 360p
-                { quality: "auto", format: 'mp4' },        // 480p
-                { quality: "auto:good", format: 'mp4' },   // 720p
-                { quality: "auto:best", format: 'mp4' }    // 1080p
-              ],
-              eager_async: true,
+              folder: "images",
               transformation: [
-                { width: 1920, crop: "limit" },           // Max width
-                { quality: "auto" }                        // Auto quality
+                { width: 1920, crop: "limit" }, // Resize for max width
+                { quality: "auto" }             // Optimize quality
               ]
             },
             (error, result) => {
@@ -44,25 +36,14 @@ const videoController = {
 
       const result = await streamUpload(req);
 
-      // Extract thumbnail URL
-      const thumbnailUrl = cloudinary.url(result.public_id, {
-        resource_type: "video",
-        format: "jpg",
-        transformation: [
-          { width: 320, crop: "scale" },
-          { start_offset: "0" }
-        ]
-      });
-
       return res.status(200).json({
         success: true,
         data: {
           originalUrl: result.secure_url,
-          thumbnailUrl: thumbnailUrl,
           publicId: result.public_id,
-          duration: result.duration,
           format: result.format,
-          eager: result.eager, // Contains different quality versions
+          width: result.width,
+          height: result.height,
         }
       });
 
@@ -70,32 +51,32 @@ const videoController = {
       console.error('Upload error:', error);
       return res.status(500).json({
         success: false,
-        error: "Error uploading video"
+        error: "Error uploading image"
       });
     }
   },
 
-  deleteVideo: async (req, res) => {
+  deleteImage: async (req, res) => {
     try {
       const { publicId } = req.params;
-      
+
       const result = await cloudinary.uploader.destroy(publicId, {
-        resource_type: "video"
+        resource_type: "image"
       });
 
       return res.status(200).json({
         success: true,
-        message: "Video deleted successfully"
+        message: "Image deleted successfully"
       });
 
     } catch (error) {
       console.error('Delete error:', error);
       return res.status(500).json({
         success: false,
-        error: "Error deleting video"
+        error: "Error deleting image"
       });
     }
   }
 };
 
-module.exports = videoController;
+module.exports = imageController;

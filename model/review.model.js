@@ -9,9 +9,12 @@ const reviewSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  userName:{
+    type: String,
+    required: true,
+  },
   movieId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "movie",
+    type: String,
     required: true,
   },
   userId: {

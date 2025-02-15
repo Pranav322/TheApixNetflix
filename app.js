@@ -13,6 +13,8 @@ const castRoute = require("./route/cast.route");
 const purchasedRoute = require("./route/purchased.route");
 const reviewRoute = require("./route/review.route")
 const videoRoutes = require('./route/video.routes');
+const imageRoutes = require('./route/image.router');
+const videoDetailRoute = require('./route/videoDetail.route'); 
 
 // Middleware
 app.use(cors());
@@ -29,6 +31,9 @@ app.use(castRoute);
 app.use(purchasedRoute);
 app.use(reviewRoute)
 app.use('/api/videos', videoRoutes);
+app.use('/api/image', imageRoutes);
+app.use('/api/videoDetail', videoDetailRoute);
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to Crypto Web");

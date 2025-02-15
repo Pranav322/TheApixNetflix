@@ -2,13 +2,52 @@ const User = require("../model/user.model");
 const jwt = require("jsonwebtoken");
 const Movie = require("../model/movie.model");
 
+exports. addMovieToUser = async (req, res) => {
+  const { userId, movieId } = req.body; // Expecting userId and movieId in the request body
+
+  if (!userId || !movieId) {
+    return res.status(400).json({ message: "User ID and Movie ID are required." });
+  }
+
+  try {
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Find the movie to make sure it exists
+    const movie = await Movie.findOne({ movieId });
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found." });
+    }
+
+    // Check if the movie is already purchased by the user
+    if (user.purchasedMovies.includes(movieId)) {
+      return res.status(400).json({ message: "Movie already purchased by the user." });
+    }
+
+    // Add the movie ID to the user's purchasedMovies array
+    user.purchasedMovies.push(movieId);
+    
+    // Save the updated user
+    await user.save();
+
+    return res.status(200).json({ message: "Movie successfully added to user's purchased list." });
+  } catch (error) {
+    console.error("Error adding movie to user:", error);
+    return res.status(500).json({ message: "Server error." });
+  }
+};
+
+
 exports.signup = async (req, res) => {
   try {
     const { user_name, email, password, contact, user_type } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(200).json({
+      return res.status(404).json({
         success: false,
         error: true,
         message: "Email already exists",
@@ -76,7 +115,7 @@ exports.signin = async (req, res) => {
       success: true,
       error: false,
       message: "user login successfully",
-      body: UserExist,
+      user: UserExist,
       token,
     });
   } catch {

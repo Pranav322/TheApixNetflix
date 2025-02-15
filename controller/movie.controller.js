@@ -2,6 +2,7 @@ const Movie = require("../model/movie.model");
 const Cast = require("../model/cast.model");
 const Episode = require("../model/episodes.model");
 const Review = require("../model/review.model");
+const VideoDetail = require("../model/video.model");
 
 const movieWithAllData = async (movies) => {
   // Check if movies is an array or a single object
@@ -18,12 +19,14 @@ const movieWithAllData = async (movies) => {
       );
 
       const review = await Review.find({ movieId: movie._id });
+      const videoDetails = await VideoDetail.find({ movieId: movie._id });
 
       return {
         ...movie._doc,
         casts,
         episodes,
         reviews: review,
+        videoDetails: videoDetails,
       };
     })
   );
@@ -62,34 +65,22 @@ exports.getMovies = async (req, res) => {
   }
 };
 
-exports.addMovie = async (req, res) => {
+exports.getOnlyMovies = async (req, res) => {
   try {
-    const { title, description, time, releaseDate, type } = req.body;
+    const movies = await Movie.find();
 
-    if (!title || !description) {
-      return res.status(400).json({
+    if (!movies.length) {
+      return res.status(404).json({
         success: false,
         error: true,
-        message: "Title, description, and time are required fields",
+        message: "No movies found",
       });
     }
-
-    const newMovie = new Movie({
-      title,
-      description,
-      time: 0,
-      releaseDate,
-      type,
-      createdBy: req.user_id,
-    });
-
-    await newMovie.save();
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       error: false,
-      message: "Movie added successfully",
-      movie: newMovie,
+      message: "Movies retrieved successfully",
+      movies: movies,
     });
   } catch (error) {
     console.error(error);
@@ -100,6 +91,73 @@ exports.addMovie = async (req, res) => {
     });
   }
 };
+
+exports.addMovie = async (req, res) => {
+  try {
+    const { movieId, title, description, language, category, rentAmount, releaseDate, type } = req.body;
+
+    console.log(`aa ${movieId} tittle ${title}, des ${description}... rent ${rentAmount}}`);
+
+    if (!movieId || !title || !description) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Movie id, Title, description, and rent amount are required fields",
+      });
+    }
+
+
+    const existingMovie = await Movie.findOne({ movieId });
+
+    if (existingMovie) {
+      existingMovie.title = title;
+      existingMovie.description = description;
+      existingMovie.language = language;
+      existingMovie.categoryTags = category;
+      existingMovie.rentAmount = rentAmount;
+      existingMovie.releaseDate = releaseDate;
+      existingMovie.type = type;
+
+      await existingMovie.save();
+
+      return res.status(201).json({
+        success: true,
+        error: false,
+        message: "Movie updated successfully",
+        movie: existingMovie,
+      });
+    } else {
+      const newMovie = new Movie({
+        movieId,
+        title,
+        description,
+        releaseDate:releaseDate ,
+        type,
+        categoryTags: category,
+        rentAmount,
+        language,
+      });
+
+      await newMovie.save();
+
+      return res.status(201).json({
+        success: true,
+        error: false,
+        message: "Movie added successfully",
+        movie: newMovie,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 exports.getMovieById = async (req, res) => {
   try {

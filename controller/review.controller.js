@@ -3,7 +3,7 @@ const Review = require("../model/review.model"); // Adjust the path as necessary
 // POST: Create a new review
 exports.createReview = async (req, res) => {
   try {
-    const { userId, movieId, review, rating } = req.body;
+    const { userId, movieId, review, rating, userName } = req.body;
 
     if (!movieId || !userId || !review || !rating) {
       res.status(200).json({
@@ -13,7 +13,7 @@ exports.createReview = async (req, res) => {
       });
     }
 
-    const newReview = new Review({ userId, movieId, review, rating });
+    const newReview = new Review({ userId, movieId, review, rating,userName });
     await newReview.save();
 
     res.status(200).json({

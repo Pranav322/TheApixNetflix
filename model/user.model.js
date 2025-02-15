@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
     default: "user",
     required: true,
   },
+  purchasedMovies: {
+    type: [String], // Array of movie IDs the user has purchased
+    default: [], // Default is an empty array
+  },
 });
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model("User", userSchema);

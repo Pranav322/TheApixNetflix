@@ -23,55 +23,49 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 exports.addEpisode = async (req, res) => {
-  upload.single("file")(req, res, async (err) => {
-    if (err) {
-      return res.status(500).json({
+  try {
+    const {
+      episodeName,
+      seasonName,
+      seasonNumber,
+      movieId,
+      videoDetails
+    } = req.body;
+
+    // Validate required fields
+    if (!episodeName || !seasonName || !seasonNumber || !movieId || !videoDetails.duration) {
+      return res.status(400).json({
         success: false,
-        error: true,
-        message: "File upload failed",
+        message: "Please provide all required fields"
       });
     }
 
-    try {
-      const { episode_url, episode_time, movieId } = req.body;
-      const file = req.file;
+    // Create new episode
+    const newEpisode = new Episode({
+      episodeName,
+      seasonName,
+      seasonNumber,
+      movieId,
+      videoDetails
+    });
 
-      if (!episode_url || !file) {
-        return res.status(200).json({
-          success: false,
-          error: true,
-          message: "Episode URL, time, and file are required fields",
-        });
-      }
+    // Save episode to database
+    const savedEpisode = await newEpisode.save();
 
-      // Upload file to Cloudinary
-      const result = await cloudinary.uploader.upload(file.path, {
-        resource_type: "auto", // Automatically detect the file type
-      });
+    return res.status(201).json({
+      success: true,
+      message: "Episode added successfully",
+      data: savedEpisode
+    });
 
-      const newEpisode = new Episode({
-        episode_url: result.secure_url, // Use the Cloudinary URL
-        episode_time,
-        movieId,
-      });
-
-      await newEpisode.save();
-
-      res.status(201).json({
-        success: true,
-        error: false,
-        message: "Episode added successfully",
-        episode: newEpisode,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        success: false,
-        error: true,
-        message: "Internal server error",
-      });
-    }
-  });
+  } catch (error) {
+    console.error("Error in addEpisode:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error adding episode",
+      error: error.message
+    });
+  }
 };
 
 exports.getEpisodes = async (req, res) => {
@@ -194,6 +188,51 @@ exports.getEpisodeByMovieId = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: true,
+      message: "Server error while fetching episodes.",
+    });
+  }
+};
+
+// Get episodes grouped by season for a movie
+exports.getEpisodesByMovieIdGrouped = async (req, res) => {
+  const { movieId } = req.params;
+
+  try {
+    const episodes = await Episode.find({ movieId })
+      .sort({ seasonNumber: 1 }) // Sort by season number
+      .lean(); // Convert to plain JavaScript objects
+
+    if (!episodes.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No episodes found for this movie.",
+        seasons: {},
+      });
+    }
+
+    // Group episodes by season
+    const groupedEpisodes = episodes.reduce((acc, episode) => {
+      const seasonKey = `Season ${episode.seasonNumber}`;
+      if (!acc[seasonKey]) {
+        acc[seasonKey] = {
+          seasonName: episode.seasonName,
+          episodes: []
+        };
+      }
+      acc[seasonKey].episodes.push(episode);
+      return acc;
+    }, {});
+
+    return res.status(200).json({
+      success: true,
+      message: "Episodes retrieved successfully",
+      seasons: groupedEpisodes,
+    });
+  } catch (error) {
+    console.error("Error in getEpisodesByMovieIdGrouped:", error);
     return res.status(500).json({
       success: false,
       error: true,

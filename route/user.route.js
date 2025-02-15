@@ -9,6 +9,7 @@ routes.post("/auth/signin", userController.signin);
 
 // Protected routes
 routes.get("/api/userList", verifyToken, userController.getUsers);
+routes.post("/api/addMovieToUser", userController.addMovieToUser);
 routes.get("/api/getprofile", verifyToken, userController.getprofile);
 
 routes.get("/api/getDashboard", userController.getAdminDashboard);

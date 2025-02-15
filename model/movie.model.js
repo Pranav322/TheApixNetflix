@@ -1,15 +1,13 @@
+// models/movie.model.js
 const mongoose = require("mongoose");
 
 const movieSchema = new mongoose.Schema({
-  title: {
-    type: String,
+  movieId: {
+    type: String, // Unique identifier for the movie
     required: true,
+    unique: true,
   },
-  watched: {
-    type: Number,
-    default: 0,
-  },
-  time: {
+  title: {
     type: String,
     required: true,
   },
@@ -18,17 +16,23 @@ const movieSchema = new mongoose.Schema({
     required: true,
   },
   releaseDate: {
-    type: Date,
+    type: String,
   },
   type: {
     type: String,
     enum: ["movie", "show"],
     default: "movie",
   },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+  categoryTags: {
+    type: [String], // List of genres or category tags
+    default: [],
+  },
+  rentAmount: {
+    type: Number, // Rental price for the movie
+  },
+  language: {
+    type: String, // Language of the movie
   },
 });
 
-module.exports = mongoose.model("movie", movieSchema);
+module.exports = mongoose.model("Movie", movieSchema);
