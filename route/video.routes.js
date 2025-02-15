@@ -5,7 +5,7 @@ const upload = require('../middleware/upload.middleware');
 
 // Upload video route (public)
 router.post('/upload', 
-  upload.single('video'), 
+  upload, 
   videoController.uploadVideo
 );
 

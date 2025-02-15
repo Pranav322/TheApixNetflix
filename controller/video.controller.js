@@ -4,32 +4,18 @@ const streamifier = require('streamifier');
 const videoController = {
   uploadVideo: async (req, res) => {
     try {
-      if (!req.file) {
+      if (!req.files?.video || !req.files?.video[0]) {
         return res.status(400).json({
           success: false,
           error: "No video file provided"
         });
       }
 
-      // Create stream from buffer
-      let streamUpload = (req) => {
+      // Create stream from buffer for video
+      let streamUpload = (buffer, options) => {
         return new Promise((resolve, reject) => {
           let stream = cloudinary.uploader.upload_stream(
-            {
-              resource_type: "video",
-              folder: "videos",
-              eager: [
-                { quality: "auto:low", format: 'mp4' },    // 360p
-                { quality: "auto", format: 'mp4' },        // 480p
-                { quality: "auto:good", format: 'mp4' },   // 720p
-                { quality: "auto:best", format: 'mp4' }    // 1080p
-              ],
-              eager_async: true,
-              transformation: [
-                { width: 1920, crop: "limit" },           // Max width
-                { quality: "auto" }                        // Auto quality
-              ]
-            },
+            options,
             (error, result) => {
               if (result) {
                 resolve(result);
@@ -38,31 +24,60 @@ const videoController = {
               }
             }
           );
-          streamifier.createReadStream(req.file.buffer).pipe(stream);
+          streamifier.createReadStream(buffer).pipe(stream);
         });
       };
 
-      const result = await streamUpload(req);
-
-      // Extract thumbnail URL
-      const thumbnailUrl = cloudinary.url(result.public_id, {
+      // Upload video
+      const videoResult = await streamUpload(req.files.video[0].buffer, {
         resource_type: "video",
-        format: "jpg",
+        folder: "videos",
+        eager: [
+          { quality: "auto:low", format: 'mp4' },    // 360p
+          { quality: "auto", format: 'mp4' },        // 480p
+          { quality: "auto:good", format: 'mp4' },   // 720p
+          { quality: "auto:best", format: 'mp4' }    // 1080p
+        ],
+        eager_async: true,
         transformation: [
-          { width: 320, crop: "scale" },
-          { start_offset: "0" }
+          { width: 1920, crop: "limit" },           // Max width
+          { quality: "auto" }                        // Auto quality
         ]
       });
+
+      let thumbnailUrl;
+
+      // If custom thumbnail provided, upload it
+      if (req.files?.thumbnail && req.files?.thumbnail[0]) {
+        const thumbnailResult = await streamUpload(req.files.thumbnail[0].buffer, {
+          resource_type: "image",
+          folder: "thumbnails",
+          transformation: [
+            { width: 320, crop: "scale" }
+          ]
+        });
+        thumbnailUrl = thumbnailResult.secure_url;
+      } else {
+        // Use auto-generated thumbnail from video
+        thumbnailUrl = cloudinary.url(videoResult.public_id, {
+          resource_type: "video",
+          format: "jpg",
+          transformation: [
+            { width: 320, crop: "scale" },
+            { start_offset: "0" }
+          ]
+        });
+      }
 
       return res.status(200).json({
         success: true,
         data: {
-          originalUrl: result.secure_url,
+          originalUrl: videoResult.secure_url,
           thumbnailUrl: thumbnailUrl,
-          publicId: result.public_id,
-          duration: result.duration,
-          format: result.format,
-          eager: result.eager, // Contains different quality versions
+          publicId: videoResult.public_id,
+          duration: videoResult.duration,
+          format: videoResult.format,
+          eager: videoResult.eager, // Contains different quality versions
         }
       });
 
