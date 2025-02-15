@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const videoDetailsSchema = new mongoose.Schema({
@@ -25,6 +24,12 @@ const videoDetailsSchema = new mongoose.Schema({
   },
   thumbnailUrl: {
     type: String, // Thumbnail image URL
+  },
+  trailerUrl: {
+    type: String, // Trailer video URL
+  },
+  trailerPublicId: {
+    type: String, // Public ID for trailer in Cloudinary
   },
   resolutions: [
     {

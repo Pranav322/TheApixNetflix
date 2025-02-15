@@ -1,9 +1,21 @@
 const VideoDetail = require('../model/video.model'); // Adjust the path to your model file
+const Movie = require('../model/movie.model'); // Adjust the path to your movie model file
 
 // Add Video Detail Function
 const addVideoDetail = async (req, res) => {
     try {
-        const { movieId, originalUrl, publicId, secureUrl, duration, format, thumbnailUrl, resolutions } = req.body;
+        const { 
+            movieId, 
+            originalUrl, 
+            publicId, 
+            secureUrl, 
+            duration, 
+            format, 
+            thumbnailUrl, 
+            trailerUrl,     // Add these
+            trailerPublicId, // new fields
+            resolutions 
+        } = req.body;
 
         // Ensure movieId and originalUrl are provided
         if (!movieId || !originalUrl) {
@@ -18,15 +30,31 @@ const addVideoDetail = async (req, res) => {
             duration,
             format,
             thumbnailUrl,
+            trailerUrl,     // Add these
+            trailerPublicId, // new fields
             resolutions,
         });
 
         await videoDetail.save();
 
-        res.status(201).json({ success: true, message: "Video detail added successfully", data: videoDetail });
+        // Update the movie document to include this video detail
+        await Movie.findOneAndUpdate(
+            { movieId: movieId },
+            { $push: { videoDetails: videoDetail._id } }
+        );
+
+        res.status(201).json({ 
+            success: true, 
+            message: "Video detail added successfully", 
+            data: videoDetail 
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: "Failed to add video detail", error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to add video detail", 
+            error: error.message 
+        });
     }
 };
 

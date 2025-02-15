@@ -28,7 +28,7 @@ const videoController = {
         });
       };
 
-      // Upload video
+      // Upload main video
       const videoResult = await streamUpload(req.files.video[0].buffer, {
         resource_type: "video",
         folder: "videos",
@@ -45,9 +45,20 @@ const videoController = {
         ]
       });
 
-      let thumbnailUrl;
+      // Upload trailer if provided
+      let trailerResult;
+      if (req.files?.trailer && req.files?.trailer[0]) {
+        trailerResult = await streamUpload(req.files.trailer[0].buffer, {
+          resource_type: "video",
+          folder: "trailers",
+          eager: [
+            { quality: "auto:low", format: 'mp4' }
+          ]
+        });
+      }
 
-      // If custom thumbnail provided, upload it
+      // Handle thumbnail upload
+      let thumbnailUrl;
       if (req.files?.thumbnail && req.files?.thumbnail[0]) {
         const thumbnailResult = await streamUpload(req.files.thumbnail[0].buffer, {
           resource_type: "image",
@@ -78,6 +89,10 @@ const videoController = {
           duration: videoResult.duration,
           format: videoResult.format,
           eager: videoResult.eager, // Contains different quality versions
+          trailer: trailerResult ? {
+            url: trailerResult.secure_url,
+            publicId: trailerResult.public_id
+          } : null
         }
       });
 

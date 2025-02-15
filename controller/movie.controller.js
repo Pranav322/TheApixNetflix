@@ -47,13 +47,30 @@ exports.getMovies = async (req, res) => {
       });
     }
 
-    const movieWithDetail = await movieWithAllData(movies);
+    // Transform the response to include video details
+    const moviesWithDetails = await Promise.all(movies.map(async (movie) => {
+      // Find video details for this movie
+      const videoDetails = await VideoDetail.findOne({ movieId: movie.movieId });
+      const casts = await Cast.find({ movieId: movie.movieId });
+      const episodes = await Episode.find({ movieId: movie.movieId });
+      const reviews = await Review.find({ movieId: movie.movieId });
+      
+      return {
+        ...movie._doc,
+        thumbnailUrl: videoDetails?.thumbnailUrl || movie.thumbnailUrl,
+        trailerUrl: videoDetails?.trailerUrl,
+        videoDetails: videoDetails ? [videoDetails] : [],
+        casts: casts || [],
+        episodes: episodes || [],
+        reviews: reviews || []
+      };
+    }));
 
     res.status(200).json({
       success: true,
       error: false,
       message: "Movies retrieved successfully",
-      movies: movieWithDetail,
+      movies: moviesWithDetails,
     });
   } catch (error) {
     console.error(error);

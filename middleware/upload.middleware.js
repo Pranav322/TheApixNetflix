@@ -3,7 +3,8 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.fieldname === 'video' && file.mimetype.startsWith('video/')) {
+  if ((file.fieldname === 'video' || file.fieldname === 'trailer') && 
+      file.mimetype.startsWith('video/')) {
     cb(null, true);
   } else if (file.fieldname === 'thumbnail' && file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -20,8 +21,9 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
-// Export middleware that handles both video and optional thumbnail
+// Export middleware that handles video, thumbnail and trailer
 module.exports = upload.fields([
   { name: 'video', maxCount: 1 },
-  { name: 'thumbnail', maxCount: 1 }
+  { name: 'thumbnail', maxCount: 1 },
+  { name: 'trailer', maxCount: 1 }
 ]);

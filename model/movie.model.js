@@ -33,6 +33,10 @@ const movieSchema = new mongoose.Schema({
   language: {
     type: String, // Language of the movie
   },
+  videoDetails: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VideoDetails'
+  }]
 });
 
 module.exports = mongoose.model("Movie", movieSchema);
