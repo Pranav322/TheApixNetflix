@@ -84,7 +84,8 @@ exports.getMovies = async (req, res) => {
 
 exports.getOnlyMovies = async (req, res) => {
   try {
-    const movies = await Movie.find();
+    // Add sort to get latest movies first
+    const movies = await Movie.find().sort({ _id: -1 });
 
     if (!movies.length) {
       return res.status(404).json({
@@ -93,6 +94,10 @@ exports.getOnlyMovies = async (req, res) => {
         message: "No movies found",
       });
     }
+
+    // Log to debug
+    console.log("Found movies count:", movies.length);
+    
     res.status(200).json({
       success: true,
       error: false,
@@ -100,7 +105,7 @@ exports.getOnlyMovies = async (req, res) => {
       movies: movies,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error in getOnlyMovies:", error);
     res.status(500).json({
       success: false,
       error: true,
@@ -111,70 +116,23 @@ exports.getOnlyMovies = async (req, res) => {
 
 exports.addMovie = async (req, res) => {
   try {
-    const { movieId, title, description, language, category, rentAmount, releaseDate, type } = req.body;
-
-    console.log(`aa ${movieId} tittle ${title}, des ${description}... rent ${rentAmount}}`);
-
-    if (!movieId || !title || !description) {
-      return res.status(400).json({
-        success: false,
-        error: true,
-        message: "Movie id, Title, description, and rent amount are required fields",
-      });
-    }
-
-
-    const existingMovie = await Movie.findOne({ movieId });
-
-    if (existingMovie) {
-      existingMovie.title = title;
-      existingMovie.description = description;
-      existingMovie.language = language;
-      existingMovie.categoryTags = category;
-      existingMovie.rentAmount = rentAmount;
-      existingMovie.releaseDate = releaseDate;
-      existingMovie.type = type;
-
-      await existingMovie.save();
-
-      return res.status(201).json({
-        success: true,
-        error: false,
-        message: "Movie updated successfully",
-        movie: existingMovie,
-      });
-    } else {
-      const newMovie = new Movie({
-        movieId,
-        title,
-        description,
-        releaseDate:releaseDate ,
-        type,
-        categoryTags: category,
-        rentAmount,
-        language,
-      });
-
-      await newMovie.save();
-
-      return res.status(201).json({
-        success: true,
-        error: false,
-        message: "Movie added successfully",
-        movie: newMovie,
-      });
-    }
+    const movie = new Movie(req.body);
+    await movie.save();
+    
+    res.status(201).json({
+      success: true,
+      message: "Movie added successfully",
+      movie,
+    });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      error: true,
-      message: "Internal server error",
+      message: "Failed to add movie",
+      error: error.message,
     });
   }
 };
-
-
 
 exports.getMovieById = async (req, res) => {
   try {
