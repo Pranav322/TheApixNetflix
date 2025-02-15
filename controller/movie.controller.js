@@ -98,11 +98,23 @@ exports.getOnlyMovies = async (req, res) => {
     // Log to debug
     console.log("Found movies count:", movies.length);
     
+    // Transform the response to include video details
+    const moviesWithDetails = await Promise.all(movies.map(async (movie) => {
+      // Find video details for this movie
+      const videoDetails = await VideoDetail.findOne({ movieId: movie.movieId });
+      
+      return {
+        ...movie._doc,
+        thumbnailUrl: videoDetails?.thumbnailUrl || movie.thumbnailUrl,
+        trailerUrl: videoDetails?.trailerUrl
+      };
+    }));
+    
     res.status(200).json({
       success: true,
       error: false,
       message: "Movies retrieved successfully",
-      movies: movies,
+      movies: moviesWithDetails,
     });
   } catch (error) {
     console.error("Error in getOnlyMovies:", error);
@@ -234,7 +246,6 @@ exports.deleteMovieById = async (req, res) => {
 };
 
 exports.searchMovies = async (req, res) => {
-  d;
   try {
     const { query } = req.query;
 
