@@ -215,32 +215,34 @@ exports.updateMovie = async (req, res) => {
 
 exports.deleteMovieById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Find and delete the movie
-    const deletedMovie = await Movie.findByIdAndDelete(id);
-
-    // If movie not found
-    if (!deletedMovie) {
+    // Find movie by movieId first, then use its _id
+    const movie = await Movie.findOne({ movieId: req.params.movieId });
+    if (!movie) {
       return res.status(404).json({
         success: false,
-        error: true,
-        message: "Movie not found",
+        message: "Movie not found"
       });
     }
 
-    res.status(200).json({
+    // Now delete using the _id
+    const deletedMovie = await Movie.findByIdAndDelete(movie._id);
+    
+    if (!deletedMovie) {
+      return res.status(404).json({
+        success: false,
+        message: "Movie not found"
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      error: false,
-      message: "Movie deleted successfully",
-      movie: deletedMovie,
+      message: "Movie deleted successfully"
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    console.error('Delete movie error:', error);
+    return res.status(500).json({
       success: false,
-      error: true,
-      message: "Internal server error",
+      message: "Error deleting movie"
     });
   }
 };
