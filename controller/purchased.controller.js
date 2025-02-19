@@ -7,6 +7,8 @@ const Movie = require("../model/movie.model");
 exports.createPurchase = async (req, res) => {
   try {
     const { movieId, userId } = req.body;
+    console.log('Received purchase for movieId:', movieId, 'userId:', userId);
+
     if (!movieId || !userId) {
       return res.status(200).json({
         success: false,
@@ -15,17 +17,17 @@ exports.createPurchase = async (req, res) => {
       });
     }
 
-    // Add validation
-    console.log("Attempting to increment rentalCount for movieId:", movieId);
-    
+    console.log('Attempting to find movie with ID:', movieId);
+    const movieExists = await Movie.exists({ _id: movieId });
+    console.log('Movie exists?', movieExists);
+
     const result = await Movie.findOneAndUpdate(
-      { _id: movieId }, // Verify this matches your ID field
+      { _id: movieId },
       { $inc: { rentalCount: 1 } },
       { new: true }
     );
+    console.log('Update operation result:', result);
     
-    console.log("Update result:", result?.rentalCount); // Should show new count
-
     const newPurchase = await purchasedModel.create({ movieId, userId });
 
     res.status(200).json({
@@ -35,7 +37,7 @@ exports.createPurchase = async (req, res) => {
       body: newPurchase,
     });
   } catch (error) {
-    console.error("Purchase error:", error);
+    console.error('Full error stack:', error);
     res.status(500).json({
       success: false,
       error: true,
