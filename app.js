@@ -16,11 +16,19 @@ const videoRoutes = require('./route/video.routes');
 const imageRoutes = require('./route/image.router');
 const videoDetailRoute = require('./route/videoDetail.route'); 
 
+// Increase timeouts and limits
+app.use((req, res, next) => {
+  req.setTimeout(3600000); // 1 hour
+  res.setTimeout(3600000); // 1 hour
+  next();
+});
+
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json({ limit: '4096mb' }));
+app.use(express.urlencoded({ extended: true, limit: '4096mb' }));
+app.use(bodyParser.json({ limit: '4096mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '4096mb' }));
 
 // Routes
 app.use(userRoute);

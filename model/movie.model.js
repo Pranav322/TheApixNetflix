@@ -36,7 +36,11 @@ const movieSchema = new mongoose.Schema({
   videoDetails: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'VideoDetails'
-  }]
+  }],
+  rentalCount: {
+    type: Number,
+    default: 0
+  }
 });
 
 module.exports = mongoose.model("Movie", movieSchema);

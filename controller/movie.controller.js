@@ -287,3 +287,31 @@ exports.searchMovies = async (req, res) => {
     });
   }
 };
+
+exports.getMovieRentalCounts = async (req, res) => {
+  try {
+    const movies = await Movie.aggregate([
+      {
+        $project: {
+          title: 1,
+          rentalCount: 1,
+          _id: 0
+        }
+      },
+      {
+        $sort: { rentalCount: -1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: movies
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching rental counts"
+    });
+  }
+};

@@ -4,6 +4,9 @@ const streamifier = require('streamifier');
 const videoController = {
   uploadVideo: async (req, res) => {
     try {
+      // Set longer timeout for large files
+      req.setTimeout(3600000); // 1 hour timeout
+      
       if (!req.files?.video || !req.files?.video[0]) {
         return res.status(400).json({
           success: false,
@@ -15,7 +18,12 @@ const videoController = {
       let streamUpload = (buffer, options) => {
         return new Promise((resolve, reject) => {
           let stream = cloudinary.uploader.upload_stream(
-            options,
+            {
+              ...options,
+              resource_type: "video",
+              chunk_size: 50000000, // 50MB chunks
+              timeout: 3600000, // 1 hour timeout for Cloudinary
+            },
             (error, result) => {
               if (result) {
                 resolve(result);
@@ -30,7 +38,6 @@ const videoController = {
 
       // Upload main video
       const videoResult = await streamUpload(req.files.video[0].buffer, {
-        resource_type: "video",
         folder: "videos",
         eager: [
           { quality: "auto:low", format: 'mp4' },    // 360p

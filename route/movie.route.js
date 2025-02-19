@@ -11,5 +11,6 @@ router.get("/api/get/movies/:id", movieController.getMovieById); // Get movie by
 router.put("/api/update/movies/:id", verifyToken, movieController.updateMovie);
 router.delete('/api/delete/movie/:movieId', movieController.deleteMovieById);
 router.get("/api/search/movies", movieController.searchMovies);
+router.get("/rental-counts", movieController.getMovieRentalCounts);
 
 module.exports = router;

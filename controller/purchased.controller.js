@@ -1,6 +1,7 @@
 const purchasedModel = require("../model/purchased.model");
 const movieModel = require("../model/movie.model");
 const Episode = require("../model/purchased.model");
+const Movie = require("../model/movie.model");
 
 // POST API to handle new purchases
 exports.createPurchase = async (req, res) => {
@@ -14,6 +15,17 @@ exports.createPurchase = async (req, res) => {
       });
     }
 
+    // Add validation
+    console.log("Attempting to increment rentalCount for movieId:", movieId);
+    
+    const result = await Movie.findOneAndUpdate(
+      { _id: movieId }, // Verify this matches your ID field
+      { $inc: { rentalCount: 1 } },
+      { new: true }
+    );
+    
+    console.log("Update result:", result?.rentalCount); // Should show new count
+
     const newPurchase = await purchasedModel.create({ movieId, userId });
 
     res.status(200).json({
@@ -23,6 +35,7 @@ exports.createPurchase = async (req, res) => {
       body: newPurchase,
     });
   } catch (error) {
+    console.error("Purchase error:", error);
     res.status(500).json({
       success: false,
       error: true,
